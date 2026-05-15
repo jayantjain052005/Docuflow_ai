@@ -1,0 +1,40 @@
+/*
+  DocuFlow AI — Global Stylesheet
+  Additional styles that supplement base.html
+*/
+
+/* Smooth scroll */
+html { scroll-behavior: smooth; }
+
+/* Custom scrollbar for all scrollable areas */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--paper-alt); }
+::-webkit-scrollbar-thumb { background: rgba(13,13,13,0.2); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(13,13,13,0.35); }
+
+/* Responsive table utility */
+.table-responsive-custom { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* Utility animations */
+.fade-in {
+  animation: fadeIn 0.3s ease forwards;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Focus rings for accessibility */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Responsive nav: hide text on small screens */
+@media (max-width: 600px) {
+  .nav-links a span { display: none; }
+  .user-chip { display: none; }
+  .brand-text { font-size: 0.95rem; }
+}

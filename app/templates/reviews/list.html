@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+
+        <h1>Manual Review Queue</h1>
+
+        <p class="subtitle">
+            Documents requiring staff review
+        </p>
+
+    </div>
+
+</div>
+
+<div class="card-custom">
+
+    <div class="card-body">
+
+        {% if documents %}
+
+        <table class="table">
+
+            <thead>
+
+                <tr>
+
+                    <th>Filename</th>
+
+                    <th>Type</th>
+
+                    <th>Status</th>
+
+                    <th>Action</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for doc in documents %}
+
+                <tr>
+
+                    <td>{{ doc.filename }}</td>
+
+                    <td>{{ doc.document_type }}</td>
+
+                    <td>{{ doc.status }}</td>
+
+                    <td>
+
+                        <a
+                            href="{{ url_for('documents.review_document', doc_id=doc.id) }}"
+                            class="btn btn-sm btn-primary"
+                        >
+
+                            Review
+
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+        {% else %}
+
+        <div class="empty-state">
+
+            <div class="empty-icon">
+                <i class="bi bi-check-circle"></i>
+            </div>
+
+            <h3>No pending reviews</h3>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

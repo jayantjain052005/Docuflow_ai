@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - DocuFlow AI{% endblock %}
+
+{% block extra_head %}
+<style>
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+  }
+  .stat-icon.blue { background: #dbeafe; color: #1d4ed8; }
+  .stat-icon.green { background: #d1fae5; color: #065f46; }
+  .stat-icon.amber { background: #fef3c7; color: #92400e; }
+  .stat-icon.purple { background: #ede9fe; color: #6d28d9; }
+  .stat-val {
+    font-size: 1.8rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .stat-label {
+    color: var(--ink-soft);
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+  }
+  .stat-note {
+    color: var(--ink-soft);
+    font-size: 0.76rem;
+    margin-top: 0.2rem;
+  }
+  .dashboard-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .filename-cell {
+    max-width: 260px;
+    word-break: break-word;
+  }
+  .status-pill {
+    display: inline-block;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    background: var(--paper-alt);
+    color: var(--ink-mid);
+  }
+  .status-pill.auto_classified,
+  .status-pill.approved {
+    background: #d1fae5;
+    color: #065f46;
+  }
+  .status-pill.pending_review {
+    background: #fef3c7;
+    color: #92400e;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>CA Dashboard</h1>
+    <p class="subtitle">AI-powered CA document automation</p>
+  </div>
+  <div class="dashboard-actions">
+    <a href="{{ url_for('documents.upload') }}" class="btn-primary-custom">
+      <i class="bi bi-cloud-upload-fill"></i> Upload Document
+    </a>
+    <a href="{{ url_for('documents.bulk_upload') }}" class="btn-outline-custom">
+      <i class="bi bi-cloud-plus"></i> Bulk Upload
+    </a>
+    <a href="{{ url_for('documents.review_queue') }}" class="btn-outline-custom">
+      <i class="bi bi-check2-square"></i> Review Queue
+    </a>
+  </div>
+</div>
+
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-icon blue"><i class="bi bi-people-fill"></i></div>
+    <div>
+      <div class="stat-val">{{ total_clients }}</div>
+      <div class="stat-label">Clients</div>
+      <div class="stat-note">active firm records</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon green"><i class="bi bi-file-earmark-text-fill"></i></div>
+    <div>
+      <div class="stat-val">{{ total_documents }}</div>
+      <div class="stat-label">Documents</div>
+      <div class="stat-note">stored in vault</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon amber"><i class="bi bi-robot"></i></div>
+    <div>
+      <div class="stat-val">{{ ai_classified }}</div>
+      <div class="stat-label">AI Classified</div>
+      <div class="stat-note">matched without review</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon purple"><i class="bi bi-exclamation-circle-fill"></i></div>
+    <div>
+      <div class="stat-val">{{ pending_reviews }}</div>
+      <div class="stat-label">Pending Reviews</div>
+      <div class="stat-note">need human check</div>
+    </div>
+  </div>
+</div>
+
+<div class="card-custom">
+  <div class="card-body">
+    <div class="d-flex align-items-center justify-content-between gap-3 mb-3 flex-wrap">
+      <h3 style="font-size:1.1rem;margin:0;">Recent Documents</h3>
+      <span class="text-muted-custom" style="font-size:0.82rem;">Latest 10 uploads</span>
+    </div>
+
+    {% if documents %}
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th>Owner</th>
+            <th>PAN</th>
+            <th>Filename</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Uploaded</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for doc, client_name, pan_number in documents %}
+          <tr>
+            <td>{{ client_name or "Unlinked" }}</td>
+            <td>{{ pan_number or "-" }}</td>
+            <td class="filename-cell" title="{{ doc.filename }}">{{ doc.filename }}</td>
+            <td>{{ doc.document_type or "Unknown" }}</td>
+            <td><span class="status-pill {{ doc.status }}">{{ doc.status or "-" }}</span></td>
+            <td>{{ doc.uploaded_at.strftime('%d %b %Y') if doc.uploaded_at else "-" }}</td>
+            <td class="text-end">
+              <a href="{{ url_for('documents.view_document', doc_id=doc.id) }}" class="btn-outline-custom" style="padding:0.35rem 0.7rem;font-size:0.8rem;">
+                <i class="bi bi-eye"></i> View
+              </a>
+              <form method="POST"
+                    action="{{ url_for('documents.delete_document', doc_id=doc.id) }}"
+                    style="display:inline;"
+                    onsubmit="return confirm('Delete this document?');">
+                <button type="submit" class="btn-danger-custom" aria-label="Delete document">
+                  <i class="bi bi-trash3"></i> Delete
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon"><i class="bi bi-folder2-open"></i></div>
+      <h3>No documents uploaded yet</h3>
+      <p>Upload a document to start AI classification.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

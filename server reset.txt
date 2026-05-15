@@ -1,0 +1,133 @@
+Yes — with free ngrok, every time you stop/restart it:
+
+```text id="1a"
+your public URL changes
+```
+
+So Twilio webhook breaks.
+
+---
+
+# EACH TIME YOU RESTART NGROK
+
+You must do ONLY these steps:
+
+---
+
+# STEP 1 — START FLASK
+
+```bash id="2a"
+python app.py
+```
+
+---
+
+# STEP 2 — START NGROK
+
+```bash id="3a"
+ngrok http 5000
+```
+
+---
+
+# STEP 3 — COPY NEW HTTPS URL
+
+Example:
+
+```text id="4a"
+https://new-random-name.ngrok-free.dev
+```
+
+---
+
+# STEP 4 — UPDATE TWILIO WEBHOOK
+
+Open:
+
+[Twilio WhatsApp Sandbox](https://console.twilio.com/us1/develop/sms/try-it-out/whatsapp-learn?utm_source=chatgpt.com)
+
+Replace:
+
+```text id="5a"
+WHEN A MESSAGE COMES IN
+```
+
+with:
+
+```text id="6a"
+https://new-random-name.ngrok-free.dev/webhook/whatsapp
+```
+
+Save.
+
+---
+
+# STEP 5 — UPDATE HARDCODED MEDIA URL
+
+Inside:
+
+```text id="7a"
+app/routes/whatsapp.py
+```
+
+Find:
+
+```python id="8a"
+https://OLD-NGROK.ngrok-free.dev
+```
+
+Replace with:
+
+```python id="9a"
+https://NEW-NGROK.ngrok-free.dev
+```
+
+Save.
+
+---
+
+# THAT'S IT
+
+You do NOT need to:
+
+* rejoin sandbox
+* rebuild webhook
+* regenerate tokens
+
+ONLY:
+
+* update ngrok URL in Twilio
+* update media URL in code
+
+---
+
+# BETTER SOLUTION (LATER)
+
+Move ngrok URL into:
+
+```text id="10a"
+.env
+```
+
+Example:
+
+```env id="11a"
+PUBLIC_BASE_URL=https://abcd.ngrok-free.dev
+```
+
+Then code automatically uses it.
+
+Much cleaner than hardcoding.
+
+---
+
+# BEST LONG-TERM SOLUTION
+
+Later:
+
+* deploy Flask publicly
+* use Render/Railway/VPS
+* static domain
+* no ngrok needed
+
+Then WhatsApp agent becomes permanent.
