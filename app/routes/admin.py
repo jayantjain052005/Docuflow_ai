@@ -5,14 +5,8 @@ DocuFlow AI — Admin Dashboard Routes (Phase 1 Upgrade)
 
 from types import SimpleNamespace
 
-from flask import Blueprint, render_template, session, redirect, url_for, flash
+from flask import Blueprint, render_template, redirect, url_for, flash
 from app.utils.permissions import super_admin_required
-
-admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
-from flask import (
-    Blueprint,
-    render_template
-)
 
 from app.models.firm import Firm
 from app.models.user import User
@@ -85,7 +79,29 @@ def org_list():
             users=firm.users,
             client_count=Client.query.filter_by(firm_id=firm.id).count(),
             created_at=firm.created_at,
+            is_active=firm.is_active,
         )
         for firm in firms
     ]
     return render_template("admin/org_list.html", orgs=orgs)
+
+
+@admin_bp.route("/organizations/<int:firm_id>/toggle-active", methods=["POST"])
+@super_admin_required
+def toggle_firm_active(firm_id):
+    from app.extensions import db
+
+    firm = Firm.query.get_or_404(firm_id)
+    firm.is_active = not firm.is_active
+
+    for user in firm.users:
+        user.is_active = firm.is_active
+
+    db.session.commit()
+
+    if firm.is_active:
+        flash(f"Firm “{firm.firm_name}” activated. All users can sign in again.", "success")
+    else:
+        flash(f"Firm “{firm.firm_name}” deactivated. All users under this firm are disabled.", "success")
+
+    return redirect(url_for("admin.org_list"))

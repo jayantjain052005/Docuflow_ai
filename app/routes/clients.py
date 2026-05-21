@@ -7,6 +7,7 @@ from flask import (
     flash,
     session
 )
+from collections import OrderedDict
 from app.models.firm import Firm
 
 from app.services.drive_service import (
@@ -17,6 +18,7 @@ from app.services.drive_service import (
 from app.extensions import db
 
 from app.models.client import Client
+from app.models.document import Document
 
 from app.utils.access_control import login_required
 
@@ -110,6 +112,60 @@ def add_client():
 
     return render_template(
         "clients/add.html"
+    )
+
+
+@clients_bp.route("/client-folders")
+@login_required
+def client_folders():
+    clients = Client.query.filter_by(
+        firm_id=session["firm_id"]
+    ).order_by(Client.client_name.asc()).all()
+
+    document_counts = dict(
+        db.session.query(
+            Document.client_id,
+            db.func.count(Document.id)
+        )
+        .filter(
+            Document.firm_id == session["firm_id"],
+            Document.client_id.isnot(None)
+        )
+        .group_by(Document.client_id)
+        .all()
+    )
+
+    return render_template(
+        "clients/folders.html",
+        clients=clients,
+        document_counts=document_counts
+    )
+
+
+@clients_bp.route("/client-folders/<int:client_id>")
+@login_required
+def client_folder_documents(client_id):
+    client = get_firm_client_or_404(client_id)
+    if not client:
+        return redirect(url_for("clients.client_folders"))
+
+    documents = Document.query.filter_by(
+        firm_id=session["firm_id"],
+        client_id=client.id
+    ).order_by(
+        Document.document_type.asc(),
+        Document.uploaded_at.desc()
+    ).all()
+
+    grouped_documents = OrderedDict()
+    for document in documents:
+        document_type = document.document_type or "Unknown"
+        grouped_documents.setdefault(document_type, []).append(document)
+
+    return render_template(
+        "clients/folder_documents.html",
+        client=client,
+        grouped_documents=grouped_documents
     )
 
 

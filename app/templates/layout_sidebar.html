@@ -180,6 +180,7 @@
     }
   </style>
   {% block extra_css %}{% endblock %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=mobile-first-20260517" />
 </head>
 <body>
 
@@ -276,6 +277,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}?v=mobile-menu-20260517"></script>
 {% block extra_js %}{% endblock %}
 </body>
 </html>

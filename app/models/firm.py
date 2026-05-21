@@ -27,6 +27,12 @@ class Firm(db.Model):
         db.String(255)
     )
 
+    is_active = db.Column(
+        db.Boolean,
+        default=True,
+        nullable=False
+    )
+
     created_at = db.Column(
         db.DateTime,
         server_default=db.func.now()

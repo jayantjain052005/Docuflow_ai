@@ -182,6 +182,15 @@ def login():
 
                 return render_template("login.html")
 
+            if user.role != User.ROLE_SUPER_ADMIN:
+                firm = Firm.query.get(user.firm_id)
+                if not firm or not firm.is_active:
+                    flash(
+                        "This firm has been deactivated. Contact your administrator.",
+                        "warning"
+                    )
+                    return render_template("login.html")
+
             session.clear()
 
             session["user_id"] = user.id

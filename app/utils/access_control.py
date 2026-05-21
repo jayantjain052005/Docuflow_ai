@@ -12,9 +12,10 @@ Future: swap get_db() with SQLAlchemy session for PostgreSQL.
 
 from functools import wraps
 from datetime import datetime, timezone
-from flask import session, abort, redirect, url_for
+from flask import session, abort, redirect, url_for, flash
 from database import get_db
 from app.models.user import User
+from app.models.firm import Firm
 
 # ── Permission rank map ────────────────────────────────────────────────────
 PERMISSION_RANK = {
@@ -114,12 +115,23 @@ def login_required(f):
         if "user_id" not in session:
             return redirect(url_for("auth.login"))
 
-        if "firm_id" not in session:
-            user = User.query.get(session["user_id"])
-            if not user:
+        user = User.query.get(session["user_id"])
+        if not user or not user.is_active:
+            session.clear()
+            flash("Account is disabled.", "warning")
+            return redirect(url_for("auth.login"))
+
+        if user.role != User.ROLE_SUPER_ADMIN:
+            firm = Firm.query.get(user.firm_id)
+            if not firm or not firm.is_active:
                 session.clear()
+                flash(
+                    "This firm has been deactivated. Contact your administrator.",
+                    "warning",
+                )
                 return redirect(url_for("auth.login"))
 
+        if "firm_id" not in session:
             session["firm_id"] = user.firm_id
             session["role"] = user.role
             session["full_name"] = user.full_name

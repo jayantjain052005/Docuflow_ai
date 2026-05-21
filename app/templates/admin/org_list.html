@@ -19,7 +19,9 @@
             <th>Mobile</th>
             <th>Users</th>
             <th>Clients</th>
+            <th>Status</th>
             <th>Created</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -31,11 +33,25 @@
           <td>{{ o.mobile or '-' }}</td>
           <td>{{ o.users|length }}</td>
           <td>{{ o.client_count }}</td>
+          <td>
+            {% if o.is_active %}
+            <span class="badge bg-success-subtle text-success border border-success-subtle">Active</span>
+            {% else %}
+            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Inactive</span>
+            {% endif %}
+          </td>
           <td style="font-size:0.8rem;color:var(--ink-soft);">{{ o.created_at.strftime('%d %b %Y') if o.created_at else '-' }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('admin.toggle_firm_active', firm_id=o.id) }}">
+              <button type="submit" class="btn btn-sm {{ 'btn-outline-danger' if o.is_active else 'btn-outline-success' }}">
+                {{ 'Deactivate' if o.is_active else 'Activate' }}
+              </button>
+            </form>
+          </td>
         </tr>
         {% endfor %}
         {% if not orgs %}
-        <tr><td colspan="7" class="text-center text-muted py-4">No firms yet.</td></tr>
+        <tr><td colspan="9" class="text-center text-muted py-4">No firms yet.</td></tr>
         {% endif %}
         </tbody>
       </table>

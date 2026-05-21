@@ -348,6 +348,9 @@ def delete_document(doc_id):
     db.session.delete(document)
     db.session.commit()
     flash("Document deleted successfully", "success")
+    next_url = request.args.get("next")
+    if next_url and next_url.startswith("/"):
+        return redirect(next_url)
     return redirect(url_for("documents.dashboard"))
 
 
