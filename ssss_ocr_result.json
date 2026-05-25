@@ -1,0 +1,63 @@
+{
+  "document_type": "ITR Acknowledgement",
+  "document_confidence": 98,
+  "detected_name": {
+    "value": "Jayant Jain",
+    "confidence": 40
+  },
+  "year": {
+    "value": null,
+    "confidence": 0
+  },
+  "important_ids": {
+    "pan": {
+      "value": "DAKPJ3801H",
+      "confidence": 82
+    },
+    "aadhaar": {
+      "value": null,
+      "confidence": 0
+    },
+    "gstin": {
+      "value": null,
+      "confidence": 0
+    },
+    "tan": {
+      "value": null,
+      "confidence": 0
+    },
+    "ifsc": {
+      "value": null,
+      "confidence": 0
+    }
+  },
+  "supplemental": {
+    "itr_type": {
+      "value": "ITR-1",
+      "confidence": 85
+    },
+    "acknowledgement_number": {
+      "value": null,
+      "confidence": 0
+    },
+    "invoice_number": {
+      "value": null,
+      "confidence": 0
+    },
+    "phone": {
+      "value": null,
+      "confidence": 0
+    },
+    "email": {
+      "value": null,
+      "confidence": 0
+    },
+    "dates": [
+      "21-08-2020"
+    ]
+  },
+  "summary": "Document Type: ITR Acknowledgement (confidence: 98%) | Name: Jayant Jain | PAN: DAKPJ3801H | ITR Type: ITR-1",
+  "raw_text": "INDLAN INCOME TAX \"RN ACKNOWLEDGEMENT Assessment Year\n[Where the data of the Return of Income m Form ITR-1 (SAHAJ), ITR-). ITR-3. 2020 21\nITR-4(SUGAM), ITR-5, ITR-4, ITR-\" filed and verified] ~\n(Please see Rude 12 of the Income-tax Rules, 1962)\n DAKPJ3801H\n Jayant jain\nwe\na\nSa\nPN SD\na\nPs]\n|\na )\nen\nee 1 ]\n ete Peaie ORae _ 00\nFO\n er)\ni 3 a Payshle - | |\nee 2 ]\ni 6)\ni ae\n \n% [AddenalTexperstiewsT TT\niJ\nfg [immer\n 5 [AdiedTamdeeemnte CE\nDY\nAS\nIncome Tax Return submutted electromically on 21-08-2020 13:25:22 fromIPaddress _ Ss -\"'\"CCC# amnd Veernnfieed by\"\nhaving PAN: on 21-08-2020 15:25:22 from IP address using\nDigital Signature Certificate (DSC).\nDSC details:\nDO NOT SEND THIS ACKNOWLEDGEMENT TO CPC, BENGALURU",
+  "ocr_score": 141.79,
+  "ocr_method": "ocr"
+}

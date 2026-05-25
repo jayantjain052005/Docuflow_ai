@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}Super Admin Dashboard - DocuFlow AI{% endblock %}
+
+{% block extra_head %}
+<style>
+  .admin-hero {
+    background: var(--ink);
+    border-radius: var(--radius);
+    padding: 2rem;
+    color: var(--paper);
+    margin-bottom: 2rem;
+  }
+  .hero-title {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.4rem;
+  }
+  .hero-subtitle {
+    color: rgba(245,242,235,0.72);
+    font-size: 0.95rem;
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .admin-stat {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .admin-stat-number {
+    font-size: 1.9rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .admin-stat-label {
+    color: var(--ink-soft);
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+  }
+  .admin-stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+  }
+  .admin-stat-icon.blue { background:#dbeafe; color:#1d4ed8; }
+  .admin-stat-icon.green { background:#d1fae5; color:#065f46; }
+  .admin-stat-icon.amber { background:#fef3c7; color:#92400e; }
+  .admin-section {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    padding: 1.4rem;
+    margin-bottom: 1.5rem;
+  }
+  .section-title {
+    font-size: 1rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+  }
+  .quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  .activity-table {
+    width: 100%;
+  }
+  .activity-table th {
+    background: var(--paper-alt);
+    font-size: 0.76rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .activity-table th,
+  .activity-table td {
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .badge-status {
+    padding: 0.22rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 700;
+  }
+  .badge-success { background:#d1fae5; color:#065f46; }
+  .badge-warning { background:#fef3c7; color:#92400e; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-hero">
+  <div class="hero-title">Super Admin Dashboard</div>
+  <div class="hero-subtitle">Monitor firms, users, AI workflows and platform activity.</div>
+</div>
+
+<div class="stats-grid">
+  <div class="admin-stat">
+    <div>
+      <div class="admin-stat-number">{{ total_firms }}</div>
+      <div class="admin-stat-label">Total Firms</div>
+    </div>
+    <div class="admin-stat-icon blue"><i class="bi bi-buildings-fill"></i></div>
+  </div>
+
+  <div class="admin-stat">
+    <div>
+      <div class="admin-stat-number">{{ total_users }}</div>
+      <div class="admin-stat-label">Total Users</div>
+    </div>
+    <div class="admin-stat-icon green"><i class="bi bi-people-fill"></i></div>
+  </div>
+
+  <div class="admin-stat">
+    <div>
+      <div class="admin-stat-number">{{ total_documents }}</div>
+      <div class="admin-stat-label">Total Documents</div>
+    </div>
+    <div class="admin-stat-icon amber"><i class="bi bi-file-earmark-text-fill"></i></div>
+  </div>
+</div>
+
+<div class="admin-section">
+  <div class="section-title">Quick Actions</div>
+  <div class="quick-actions">
+    <a href="{{ url_for('auth.register', mode='professional') }}" class="btn-primary-custom">
+      <i class="bi bi-building-add"></i> Create Firm Admin
+    </a>
+    <a href="{{ url_for('admin.user_list') }}" class="btn-outline-custom">
+      <i class="bi bi-person-lines-fill"></i> Manage Users
+    </a>
+    <a href="{{ url_for('admin.org_list') }}" class="btn-outline-custom">
+      <i class="bi bi-buildings"></i> View Firms
+    </a>
+  </div>
+</div>
+
+<div class="admin-section">
+  <div class="section-title">Platform Activity</div>
+  <div class="table-responsive">
+    <table class="activity-table">
+      <thead>
+        <tr>
+          <th>Module</th>
+          <th>Status</th>
+          <th>Details</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>AI Classification Engine</td>
+          <td><span class="badge-status badge-success">Active</span></td>
+          <td>OCR + AI routing operational</td>
+        </tr>
+        <tr>
+          <td>Manual Review Queue</td>
+          <td><span class="badge-status badge-warning">Monitoring</span></td>
+          <td>Pending review documents being tracked</td>
+        </tr>
+        <tr>
+          <td>Google Drive Integration</td>
+          <td><span class="badge-status badge-warning">In Progress</span></td>
+          <td>Folder routing layer under integration</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

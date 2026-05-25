@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}{{ document.filename }} - DocuFlow AI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 style="font-size:1.35rem;word-break:break-word;">{{ document.filename }}</h1>
+    <p class="subtitle">Document details and extracted text.</p>
+  </div>
+  <div style="display:flex;gap:0.65rem;flex-wrap:wrap;">
+    {% if document.google_drive_file_id %}
+    <a href="https://drive.google.com/file/d/{{ document.google_drive_file_id }}/view" target="_blank" rel="noopener" class="btn-outline-custom">
+      <i class="bi bi-file-earmark-pdf"></i> View File
+    </a>
+    {% endif %}
+    <a href="{{ url_for('documents.dashboard') }}" class="btn-outline-custom">
+      <i class="bi bi-arrow-left"></i> Dashboard
+    </a>
+  </div>
+</div>
+
+<div class="card-custom">
+  <div class="card-body">
+    <div class="row g-3 mb-4">
+      <div class="col-md-3">
+        <span class="badge-type">Type</span>
+        <div class="mt-2 fw-semibold">{{ document.document_type or 'Unknown' }}</div>
+      </div>
+      <div class="col-md-3">
+        <span class="badge-type">Status</span>
+        <div class="mt-2 fw-semibold">{{ document.status or '-' }}</div>
+      </div>
+      <div class="col-md-3">
+        <span class="badge-type">Assessment Year</span>
+        <div class="mt-2 fw-semibold">{{ document.assessment_year or '-' }}</div>
+      </div>
+      <div class="col-md-3">
+        <span class="badge-type">Uploaded</span>
+        <div class="mt-2 fw-semibold">{{ document.uploaded_at }}</div>
+      </div>
+    </div>
+
+    <h4 style="font-size:1rem;margin-bottom:0.8rem;">AI Extracted Text</h4>
+    <div style="background:var(--paper-alt);border:1px solid var(--border);padding:1rem;border-radius:10px;white-space:pre-wrap;max-height:520px;overflow:auto;font-size:0.9rem;line-height:1.6;">{{ document.extracted_text or 'No text extracted.' }}</div>
+  </div>
+</div>
+{% endblock %}

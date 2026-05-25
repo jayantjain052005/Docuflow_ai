@@ -1,0 +1,114 @@
+{% extends "layout_sidebar.html" %}
+{% block title %}Organization Dashboard — DocuFlow AI{% endblock %}
+{% block topbar_title %}Organization Dashboard{% endblock %}
+
+{% block content %}
+<!-- Org Header -->
+<div class="df-card mb-4" style="background: linear-gradient(135deg, var(--ink) 0%, #2a2a2a 100%); color: #fff; border:none;">
+  <div class="df-card-body d-flex align-items-center justify-content-between">
+    <div>
+      <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.5);">Organization</div>
+      <h3 class="mb-1" style="color:var(--accent-3);">{{ org.name }}</h3>
+      <span class="badge" style="background:rgba(255,255,255,0.15);color:#fff;font-size:0.75rem;">{{ org.organization_type }}</span>
+    </div>
+    <div class="text-end">
+      <div style="font-size:0.75rem;color:rgba(255,255,255,0.45);">Since {{ org.created_at[:10] }}</div>
+      <a href="{{ url_for('org.invite_staff') }}" class="btn btn-sm mt-2" style="background:var(--accent-3);color:var(--ink);font-weight:700;">
+        <i class="bi bi-person-plus me-1"></i> Invite Staff
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Stats Row -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="stat-card d-flex align-items-center gap-3">
+      <div class="stat-icon" style="background:#2d6a4f20;color:#2d6a4f;"><i class="bi bi-people-fill"></i></div>
+      <div>
+        <div class="stat-val" style="color:#2d6a4f;">{{ staff_count }}</div>
+        <div class="stat-label">Staff Members</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card d-flex align-items-center gap-3">
+      <div class="stat-icon" style="background:#c84b3120;color:#c84b31;"><i class="bi bi-person-circle"></i></div>
+      <div>
+        <div class="stat-val" style="color:#c84b31;">{{ client_count }}</div>
+        <div class="stat-label">Clients</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- Recent Clients -->
+  <div class="col-md-7">
+    <div class="df-card">
+      <div class="df-card-header">
+        <h6><i class="bi bi-people me-1"></i> Recent Clients</h6>
+        <a href="{{ url_for('org.client_list') }}" style="font-size:0.8rem;">View All</a>
+      </div>
+      <div class="df-card-body p-0">
+        <table class="df-table">
+          <thead><tr><th>Name</th><th>Phone</th><th>Added By</th><th>Date</th><th></th></tr></thead>
+          <tbody>
+          {% for c in recent_clients %}
+          <tr>
+            <td><strong>{{ c.full_name }}</strong></td>
+            <td style="font-size:0.85rem;">{{ c.primary_phone or '—' }}</td>
+            <td style="font-size:0.8rem;color:var(--ink-soft);">{{ c.added_by }}</td>
+            <td style="font-size:0.8rem;color:var(--ink-soft);">{{ c.created_at[:10] }}</td>
+            <td>
+              <a href="{{ url_for('org.view_client', client_id=c.id) }}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-eye"></i>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+          {% if not recent_clients %}
+          <tr><td colspan="5" class="text-center text-muted py-3">No clients yet. <a href="{{ url_for('org.add_client') }}">Add one</a>.</td></tr>
+          {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Staff -->
+  <div class="col-md-5">
+    <div class="df-card">
+      <div class="df-card-header">
+        <h6><i class="bi bi-person-badge me-1"></i> Staff Members</h6>
+        <a href="{{ url_for('org.staff_list') }}" style="font-size:0.8rem;">Manage</a>
+      </div>
+      <div class="df-card-body p-0">
+        <table class="df-table">
+          <thead><tr><th>Name</th><th>Role</th></tr></thead>
+          <tbody>
+          {% for m in staff_members %}
+          <tr>
+            <td>
+              <div style="font-weight:600;">{{ m.username }}</div>
+              <div style="font-size:0.75rem;color:var(--ink-soft);">{{ m.phone }}</div>
+            </td>
+            <td>
+              <span class="badge" style="font-size:0.72rem;
+                background:{{ '#e8b64b' if m.role=='owner' else ('#2d6a4f' if m.role=='manager' else '#5b7fa6') }};
+                color:{{ '#0d0d0d' if m.role=='owner' else '#fff' }};">
+                {{ m.role | title }}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+          {% if not staff_members %}
+          <tr><td colspan="2" class="text-center text-muted py-3">No staff yet.</td></tr>
+          {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

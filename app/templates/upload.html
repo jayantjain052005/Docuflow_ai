@@ -1,0 +1,438 @@
+{% extends "base.html" %}
+{% block title %}Upload Document — DocuFlow AI{% endblock %}
+
+{% block extra_head %}
+<style>
+  .upload-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 1.5rem;
+    align-items: start;
+  }
+  @media (max-width: 1024px) {
+    .upload-grid { grid-template-columns: 1fr 280px; }
+  }
+  @media (max-width: 768px) {
+    .upload-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Drop zone */
+  .drop-zone {
+    border: 2.5px dashed var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    padding: 3.5rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color: var(--ink);
+    background: var(--paper-alt);
+  }
+  .drop-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+  .drop-icon {
+    font-size: 3rem;
+    color: var(--ink-soft);
+    margin-bottom: 1rem;
+    transition: color 0.2s, transform 0.2s;
+  }
+  .drop-zone:hover .drop-icon { color: var(--accent); transform: scale(1.05); }
+  .drop-title {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 0.4rem;
+  }
+  .drop-sub {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+  .drop-types {
+    margin-top: 1.2rem;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .type-chip {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 0.25rem 0.65rem;
+    border-radius: 5px;
+    border: 1.5px solid var(--border);
+    color: var(--ink-mid);
+  }
+  .type-chip.pdf { border-color: #fca5a5; color: #b91c1c; background: #fee2e2; }
+  .type-chip.jpg { border-color: #93c5fd; color: #1d4ed8; background: #dbeafe; }
+  .type-chip.png { border-color: #6ee7b7; color: #065f46; background: #d1fae5; }
+
+  /* File selected state */
+  .file-selected {
+    margin-top: 1.2rem;
+    display: none;
+    align-items: center;
+    gap: 0.75rem;
+    background: #d1fae5;
+    border: 1.5px solid #6ee7b7;
+    border-radius: 9px;
+    padding: 0.75rem 1rem;
+    font-size: 0.88rem;
+    color: #065f46;
+    font-weight: 600;
+  }
+  .file-error {
+    margin-top: 1rem;
+    display: none;
+    background: #fee2e2;
+    border: 1.5px solid #fca5a5;
+    border-radius: 9px;
+    padding: 0.75rem 1rem;
+    font-size: 0.88rem;
+    color: #991b1b;
+    font-weight: 600;
+  }
+
+  /* Info sidebar */
+  .info-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .info-card-head {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 1rem 1.3rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .info-card-body { padding: 1.2rem 1.3rem; }
+  .info-item {
+    display: flex;
+    gap: 0.65rem;
+    margin-bottom: 1rem;
+    font-size: 0.86rem;
+    color: var(--ink-mid);
+    line-height: 1.5;
+  }
+  .info-item .bi {
+    color: var(--accent);
+    font-size: 1rem;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+  }
+  .info-item strong { color: var(--ink); display: block; font-weight: 600; }
+
+  /* Upload button */
+  .btn-upload {
+    width: 100%;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 0.8rem;
+    border-radius: 9px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.97rem;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    margin-top: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  .btn-upload:hover { background: #a83a23; transform: translateY(-1px); }
+  .btn-upload:disabled { background: var(--ink-soft); cursor: not-allowed; transform: none; }
+
+  /* Loading overlay */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(13,13,13,0.55);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1rem;
+    color: white;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+  .spinner {
+    width: 48px; height: 48px;
+    border: 4px solid rgba(255,255,255,0.25);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+{% endblock %}
+{% block content %}
+
+<!-- Loading overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div>Processing document with AI…</div>
+  <div style="font-size:0.82rem;opacity:0.75;font-weight:400;">
+    This may take a few seconds
+  </div>
+</div>
+
+<div class="page-header">
+
+  <div>
+    <h1>Upload Document</h1>
+
+    <p class="subtitle">
+      Supported formats: PDF, JPG, PNG · Max size: 16 MB
+    </p>
+  </div>
+
+  <a href="{{ url_for('documents.dashboard') }}"
+     class="btn-outline-custom">
+
+    <i class="bi bi-arrow-left"></i>
+    Dashboard
+
+  </a>
+
+</div>
+
+<div class="upload-grid">
+
+  <!-- Upload Section -->
+  <div>
+
+    <form method="POST"
+          enctype="multipart/form-data"
+          id="uploadForm"
+          action="{{ url_for('documents.upload') }}">
+
+      <!-- Drop Zone -->
+      <div class="drop-zone" id="dropZone">
+
+        <input type="file"
+               name="file"
+               id="fileInput"
+               accept=".pdf,.jpg,.jpeg,.png"
+               onchange="handleFileSelect(this)" />
+
+        <div class="drop-icon">
+          <i class="bi bi-cloud-arrow-up"></i>
+        </div>
+
+        <div class="drop-title">
+          Drop your file here
+        </div>
+
+        <div class="drop-sub">
+          or click to browse your computer
+        </div>
+
+        <div class="drop-types">
+          <span class="type-chip pdf">PDF</span>
+          <span class="type-chip jpg">JPG</span>
+          <span class="type-chip png">PNG</span>
+        </div>
+
+      </div>
+
+      <!-- Selected File -->
+      <div class="file-selected" id="fileSelected">
+
+        <i class="bi bi-file-earmark-check-fill"
+           style="font-size:1.2rem;"></i>
+
+        <span id="selectedFileName">
+          No file selected
+        </span>
+
+      </div>
+
+      <div class="file-error" id="fileError"></div>
+
+      <!-- Upload Button -->
+      <button type="submit"
+              class="btn-upload"
+              id="uploadBtn"
+              disabled
+              >
+
+        <i class="bi bi-cloud-upload-fill"></i>
+
+        Upload &amp; Analyse with AI
+
+      </button>
+
+    </form>
+
+  </div>
+
+  <!-- Info Sidebar -->
+  <div>
+
+    <div class="info-card">
+
+      <div class="info-card-head">
+        <i class="bi bi-stars"></i>
+        What happens next?
+      </div>
+
+      <div class="info-card-body">
+
+        <div class="info-item">
+
+          <i class="bi bi-1-circle-fill"></i>
+
+          <div>
+            <strong>Text Extraction</strong>
+
+            OCR (for images) or pdfplumber (for PDFs)
+            extracts all readable text.
+          </div>
+
+        </div>
+
+        <div class="info-item">
+
+          <i class="bi bi-2-circle-fill"></i>
+
+          <div>
+            <strong> AI Classification</strong>
+
+             AI automatically detects document type,
+extracts identity information,
+matches the correct client,
+and routes the file.
+          </div>
+
+        </div>
+
+        <div class="info-item">
+
+          <i class="bi bi-3-circle-fill"></i>
+
+          <div>
+            <strong>Client Mapping</strong>
+
+            AI extracts PAN, document type,
+assessment year and maps
+documents to CA clients.
+          </div>
+
+        </div>
+
+        <hr class="divider" />
+
+        <div class="info-item">
+
+          <i class="bi bi-shield-check"></i>
+
+          <div>
+            <strong>Private &amp; Secure</strong>
+
+           Documents are securely stored
+inside the CA firm's document system.         </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script>
+  function handleFileSelect(input) {
+    const btn = document.getElementById('uploadBtn');
+    const selected = document.getElementById('fileSelected');
+    const name = document.getElementById('selectedFileName');
+    const error = document.getElementById('fileError');
+
+    error.style.display = 'none';
+    error.textContent = '';
+
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      if (file.size > 16 * 1024 * 1024) {
+        selected.style.display = 'none';
+        btn.disabled = true;
+        input.value = '';
+        error.textContent = 'File is larger than 16 MB. Choose a smaller file.';
+        error.style.display = 'block';
+        return;
+      }
+      name.textContent = file.name + ' (' + (file.size / 1024 / 1024).toFixed(2) + ' MB)';
+      selected.style.display = 'flex';
+      btn.disabled = false;
+    } else {
+      selected.style.display = 'none';
+      btn.disabled = true;
+    }
+  }
+
+  function showLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    overlay.style.display = 'flex';
+  }
+
+  // Drag and drop highlighting
+  const zone = document.getElementById('dropZone');
+
+if (zone) {
+
+  zone.addEventListener('dragover', (event) => {
+    event.preventDefault();
+    zone.classList.add('dragover');
+  });
+
+  zone.addEventListener('dragleave', () => {
+    zone.classList.remove('dragover');
+  });
+
+  zone.addEventListener('drop', (event) => {
+    event.preventDefault();
+    zone.classList.remove('dragover');
+    const input = document.getElementById('fileInput');
+    input.files = event.dataTransfer.files;
+    handleFileSelect(input);
+  });
+
+}
+const uploadForm = document.getElementById('uploadForm');
+
+if (uploadForm) {
+
+  uploadForm.addEventListener('submit', function() {
+    showLoading();
+  });
+
+}
+
+
+</script>
+{% endblock %}

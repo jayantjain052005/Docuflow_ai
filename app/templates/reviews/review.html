@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+
+        <h1>Review Document</h1>
+
+        <p class="subtitle">
+            Verify AI extracted information
+        </p>
+
+    </div>
+
+    {% if document.google_drive_file_id %}
+    <a
+        href="https://drive.google.com/file/d/{{ document.google_drive_file_id }}/view"
+        target="_blank"
+        rel="noopener"
+        class="btn-outline-custom"
+    >
+        <i class="bi bi-file-earmark-pdf"></i> View File
+    </a>
+    {% endif %}
+
+</div>
+
+<div class="card-custom">
+
+    <div class="card-body">
+
+        <form method="POST">
+
+            <div class="mb-3">
+
+                <label class="form-label-custom" for="filename">
+                    Filename
+                </label>
+
+                <input
+                    type="text"
+                    id="filename"
+                    class="form-control-custom"
+                    value="{{ document.filename }}"
+                    disabled
+                >
+
+            </div>
+
+            <div class="mb-3">
+
+                <label class="form-label-custom" for="document_type">
+                    Document Type
+                </label>
+
+                <input
+                    type="text"
+                    id="document_type"
+                    name="document_type"
+                    class="form-control-custom"
+                    value="{{ document.document_type }}"
+                >
+
+            </div>
+
+            <div class="mb-3">
+
+                <label class="form-label-custom" for="assessment_year">
+                    Assessment Year
+                </label>
+
+                <input
+                    type="text"
+                    id="assessment_year"
+                    name="assessment_year"
+                    class="form-control-custom"
+                    value="{{ document.assessment_year }}"
+                >
+
+            </div>
+
+            <div class="mb-3">
+
+                <label class="form-label-custom" for="client_id">
+                    Assign Client
+                </label>
+
+                <select
+                    name="client_id"
+                    id="client_id"
+                    class="form-control-custom"
+                >
+
+                    {% for client in clients %}
+
+                    <option value="{{ client.id }}">
+
+                        {{ client.client_name }}
+                        ({{ client.pan_number }})
+
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+            <button
+                type="submit"
+                class="btn-primary-custom"
+            >
+
+                Approve Document
+
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}
