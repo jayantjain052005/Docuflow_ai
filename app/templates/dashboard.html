@@ -74,6 +74,52 @@
     background: #fef3c7;
     color: #92400e;
   }
+  .activity-list {
+    display: grid;
+    gap: 0.75rem;
+  }
+  .activity-item {
+    display: grid;
+    grid-template-columns: minmax(130px, 0.9fr) minmax(180px, 1.4fr) minmax(160px, 1fr) auto;
+    gap: 0.85rem;
+    align-items: center;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--paper-alt);
+  }
+  .activity-client {
+    font-weight: 800;
+    color: var(--ink);
+  }
+  .activity-meta,
+  .activity-time {
+    color: var(--ink-soft);
+    font-size: 0.82rem;
+  }
+  .activity-request {
+    color: var(--ink-mid);
+    word-break: break-word;
+  }
+  .activity-result {
+    justify-self: start;
+    border-radius: 999px;
+    padding: 0.28rem 0.65rem;
+    font-size: 0.78rem;
+    font-weight: 800;
+    background: #dbeafe;
+    color: #1d4ed8;
+  }
+  .activity-result.missed {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+  @media (max-width: 760px) {
+    .activity-item {
+      grid-template-columns: 1fr;
+      gap: 0.45rem;
+    }
+  }
 </style>
 {% endblock %}
 
@@ -134,6 +180,45 @@
       <div class="stat-label">Pending Reviews</div>
       <div class="stat-note">need human check</div>
     </div>
+  </div>
+</div>
+
+<div class="card-custom" style="margin-bottom:1.5rem;">
+  <div class="card-body">
+    <div class="d-flex align-items-center justify-content-between gap-3 mb-3 flex-wrap">
+      <div>
+        <h3 style="font-size:1.1rem;margin:0;">WhatsApp Retrieval Activity</h3>
+        <span class="text-muted-custom" style="font-size:0.82rem;">Latest client document requests</span>
+      </div>
+      <span class="badge-type"><i class="bi bi-whatsapp"></i> Live requests</span>
+    </div>
+
+    {% if whatsapp_activities %}
+    <div class="activity-list">
+      {% for log, client_name, pan_number in whatsapp_activities %}
+        {% set parts = log.action.split(" | ") %}
+        {% set request_text = parts[2] if parts|length > 2 else log.action %}
+        {% set result_text = parts[3] if parts|length > 3 else "Logged" %}
+        <div class="activity-item">
+          <div>
+            <div class="activity-client">{{ client_name or (parts[1] if parts|length > 1 else "Unknown client") }}</div>
+            <div class="activity-meta">{{ pan_number or log.ip_address or "-" }}</div>
+          </div>
+          <div class="activity-request">{{ request_text }}</div>
+          <span class="activity-result {{ 'missed' if 'No document available' in result_text or 'No supported' in result_text else '' }}">
+            {{ result_text }}
+          </span>
+          <div class="activity-time">{{ log.timestamp.strftime('%d %b, %I:%M %p') if log.timestamp else "-" }}</div>
+        </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon"><i class="bi bi-whatsapp"></i></div>
+      <h3>No WhatsApp retrievals yet</h3>
+      <p>Client document requests will appear here after WhatsApp messages reach DocuFlow.</p>
+    </div>
+    {% endif %}
   </div>
 </div>
 

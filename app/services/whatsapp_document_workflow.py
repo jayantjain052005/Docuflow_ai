@@ -12,6 +12,7 @@ from werkzeug.utils import secure_filename
 from ocr import process_document
 
 from app.extensions import db
+from app.models.audit_log import AuditLog
 from app.models.client import Client
 from app.models.document import Document
 from app.models.firm import Firm
@@ -35,7 +36,12 @@ DOCUMENT_KEYWORDS = {
         "insome tax return",
     ],
     "GST": ["gst", "gstin"],
-    "Bank Statement": ["bank statement", "statement"],
+    "Bank Statement": [
+        "bank statement",
+        "bank statment",
+        "statement",
+        "statment",
+    ],
     "Balance Sheet": [
         "balance sheet",
         "balancesheet",
@@ -160,10 +166,57 @@ def search_client_documents(phone, message, firm_id):
                 clients[0],
                 requested_types,
                 [],
-                f"No ITR found for AY {requested_year}",
+                build_no_document_reply(requested_types, requested_year),
             )
 
     return clients[0], requested_types, documents, None
+
+
+def build_document_reply(documents):
+    lines = ["Here are your matching documents:"]
+    for index, doc in enumerate(documents, start=1):
+        drive_url = (
+            "https://drive.google.com/uc?export=download&id="
+            f"{doc.google_drive_file_id}"
+            if doc.google_drive_file_id
+            else "Drive link unavailable"
+        )
+        lines.append(f"{index}. {doc.filename} ({doc.document_type or 'Unknown'})")
+        lines.append(drive_url)
+    return "\n".join(lines)
+
+
+def build_no_document_reply(requested_types, requested_year=None):
+    requested_label = ", ".join(requested_types) if requested_types else "the requested document"
+    year_label = f" for AY {requested_year}" if requested_year else ""
+    return (
+        f"No document available for {requested_label}{year_label} right now. "
+        "Please ask your CA firm to upload it in DocuFlow."
+    )
+
+
+def log_whatsapp_retrieval(phone, message, firm_id, client=None, documents=None, error=None):
+    count = len(documents or [])
+    request_text = " ".join((message or "").split())[:90] or "blank message"
+    client_label = client.client_name if client and client.client_name else normalize_phone(phone)
+
+    if error:
+        result = error
+    elif count:
+        result = f"{count} document(s) found"
+    else:
+        result = "No document available"
+
+    db.session.add(
+        AuditLog(
+            firm_id=firm_id,
+            user_id=None,
+            action=f"WhatsApp retrieval | {client_label} | {request_text} | {result}",
+            entity_type="whatsapp_retrieval",
+            entity_id=client.id if client else None,
+            ip_address=normalize_phone(phone),
+        )
+    )
 
 
 def _build_metadata(ocr_result):
@@ -295,7 +348,7 @@ def process_local_document(
 
 
 def download_meta_media(media_id, fallback_mime_type=None, fallback_filename=None):
-    token = os.getenv("TOKEN") or os.getenv("WHATSAPP_TOKEN") or os.getenv("META_WHATSAPP_TOKEN")
+    token = os.getenv("WHATSAPP_TOKEN") or os.getenv("META_WHATSAPP_TOKEN") or os.getenv("TOKEN")
     if not token:
         raise RuntimeError("Meta WhatsApp token is not configured")
 
@@ -379,19 +432,19 @@ def process_twilio_webhook_form(form):
         if error:
             reply = error
         elif docs:
-            lines = ["Here are your matching documents:"]
-            for index, doc in enumerate(docs, start=1):
-                drive_url = (
-                    "https://drive.google.com/uc?export=download&id="
-                    f"{doc.google_drive_file_id}"
-                    if doc.google_drive_file_id
-                    else "Drive link unavailable"
-                )
-                lines.append(f"{index}. {doc.filename} ({doc.document_type or 'Unknown'})")
-                lines.append(drive_url)
-            reply = "\n".join(lines)
+            reply = build_document_reply(docs)
         else:
-            reply = "No matching documents found."
+            reply = build_no_document_reply(requested)
+
+        log_whatsapp_retrieval(
+            sender,
+            body,
+            firm_id=client.firm_id,
+            client=client,
+            documents=docs,
+            error=error,
+        )
+        db.session.commit()
 
         return {
             "sender": sender,
@@ -430,8 +483,8 @@ def process_twilio_webhook_form(form):
 
 
 def send_meta_text_message(to_number, text):
-    token = os.getenv("TOKEN") or os.getenv("WHATSAPP_TOKEN") or os.getenv("META_WHATSAPP_TOKEN")
-    phone_number_id = os.getenv("PHONE_NUMBER_ID") or os.getenv("WHATSAPP_PHONE_NUMBER_ID")
+    token = os.getenv("WHATSAPP_TOKEN") or os.getenv("META_WHATSAPP_TOKEN") or os.getenv("TOKEN")
+    phone_number_id = os.getenv("WHATSAPP_PHONE_NUMBER_ID") or os.getenv("PHONE_NUMBER_ID")
 
     if not token or not phone_number_id:
         logger.info("Meta WhatsApp reply skipped; token or phone_number_id missing")
@@ -498,9 +551,19 @@ def process_meta_webhook_payload(payload):
                 if error:
                     safe_send_meta_text_message(sender, error)
                 elif docs:
-                    safe_send_meta_text_message(sender, f"Found {len(docs)} matching document(s).")
+                    safe_send_meta_text_message(sender, build_document_reply(docs))
                 else:
-                    safe_send_meta_text_message(sender, "No matching documents found.")
+                    safe_send_meta_text_message(sender, build_no_document_reply(requested))
+
+                log_whatsapp_retrieval(
+                    sender,
+                    body,
+                    firm_id=client.firm_id,
+                    client=client,
+                    documents=docs,
+                    error=error,
+                )
+                db.session.commit()
                 continue
 
             if message_type not in ("document", "image"):

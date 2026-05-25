@@ -17,6 +17,7 @@ from ocr.batch import BatchProcessor
 from ocr import process_document
 
 from app.extensions import db
+from app.models.audit_log import AuditLog
 from app.models.client import Client
 from app.models.document import Document
 from app.models.firm import Firm
@@ -263,6 +264,15 @@ def dashboard():
         .limit(10)
         .all()
     )
+    whatsapp_activities = (
+        db.session.query(AuditLog, Client.client_name, Client.pan_number)
+        .outerjoin(Client, AuditLog.entity_id == Client.id)
+        .filter(AuditLog.firm_id == firm_id)
+        .filter(AuditLog.entity_type == "whatsapp_retrieval")
+        .order_by(AuditLog.timestamp.desc())
+        .limit(15)
+        .all()
+    )
 
     return render_template(
         "dashboard.html",
@@ -271,6 +281,7 @@ def dashboard():
         pending_reviews=pending_reviews,
         ai_classified=ai_classified,
         documents=documents,
+        whatsapp_activities=whatsapp_activities,
     )
 
 

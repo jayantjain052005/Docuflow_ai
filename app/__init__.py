@@ -77,8 +77,9 @@ def create_app():
     def verify_whatsapp_webhook():
         verify_token = request.args.get("hub.verify_token")
         challenge = request.args.get("hub.challenge")
+        expected_token = os.getenv("WHATSAPP_VERIFY_TOKEN", "867779121@#")
 
-        if verify_token == "867779121@#":
+        if verify_token == expected_token:
             return challenge or "", 200
 
         return "Verification failed", 403
