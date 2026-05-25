@@ -1,8 +1,0 @@
-.env
-client_secret.json
-token.json
-*.pyc
-__pycache__/
-**/__pycache__/
-uploads/
-instance/*.db-journal
